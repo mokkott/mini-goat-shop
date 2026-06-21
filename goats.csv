@@ -1,0 +1,13 @@
+goat_code,breed_code,name,birth_date,gender,color,health_status,available
+GT001,PYGMY,Biscuit,2022-03-15,female,caramel,vaccinated,true
+GT002,PYGMY,Pebble,2022-05-20,male,brown-white,vaccinated,true
+GT003,NIGDWARF,Starlight,2021-11-08,female,black-white,healthy,true
+GT004,NIGDWARF,Hazel,2023-01-22,female,golden,healthy,true
+GT005,KINDER,Maple,2022-08-10,male,brown,vaccinated,false
+GT006,PYGORA,Fluffy,2021-07-30,female,white,healthy,true
+GT007,PYGMY,Cocoa,2023-04-05,male,chocolate,healthy,true
+GT008,MINI_LAM,Elfie,2022-12-01,female,grey-white,vaccinated,true
+GT009,NIGDWARF,Pumpkin,2023-06-18,male,orange-brown,healthy,true
+GT010,KINDER,Clover,2021-09-25,female,brown-white,vaccinated,true
+GT011,PYGORA,Cotton,2022-02-14,male,white,healthy,false
+GT012,PYGMY,Daisy,2023-08-03,female,caramel-white,healthy,true

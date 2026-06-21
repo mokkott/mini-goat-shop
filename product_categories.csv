@@ -1,0 +1,10 @@
+category_code,category_name,parent_category_code
+FEED,Feed,
+CARE,Care & Grooming,
+ACCESSORIES,Accessories,
+FEED_HAY,Hay,FEED
+FEED_PELLET,Pellets,FEED
+CARE_GROOM,Grooming Kits,CARE
+CARE_VET,Vet Supplies,CARE
+ACC_COLLAR,Collars & Leashes,ACCESSORIES
+ACC_TOY,Toys,ACCESSORIES

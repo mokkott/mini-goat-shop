@@ -1,0 +1,9 @@
+order_code,customer_code,order_date,status,payment_method,total_amount
+ORD001,CU001,2023-02-10,delivered,card,650.00
+ORD002,CU002,2023-04-15,delivered,transfer,530.00
+ORD003,CU003,2023-06-20,delivered,cash,112.48
+ORD004,CU004,2023-09-05,delivered,card,480.00
+ORD005,CU001,2023-11-12,delivered,card,38.99
+ORD006,CU005,2024-02-01,delivered,transfer,720.00
+ORD007,CU006,2024-03-10,shipped,card,200.00
+ORD008,CU002,2024-04-22,processing,card,89.97

@@ -1,0 +1,7 @@
+customer_code,email,first_name,last_name,phone,address,registration_date
+CU001,anna.k@mail.lt,Anna,Kazlauskaitė,+37060011111,"Gedimino pr. 15, Vilnius",2023-01-10
+CU002,tomas.v@gmail.com,Tomas,Vaitkus,+37060022222,"Laisvės al. 50, Kaunas",2023-03-22
+CU003,laura.p@yahoo.com,Laura,Petraitienė,+37060033333,"Tilžės g. 8, Klaipėda",2023-05-15
+CU004,jonas.s@mail.lt,Jonas,Stankus,+37060044444,"Maironio g. 3, Šiauliai",2023-07-01
+CU005,ruta.m@gmail.com,Rūta,Mockūnaitė,+37060055555,"Vytauto g. 12, Panevėžys",2024-01-05
+CU006,darius.z@mail.lt,Darius,Žukauskas,+37060066666,"Kauno g. 7, Alytus",2024-02-18

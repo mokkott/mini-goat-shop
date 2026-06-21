@@ -1,0 +1,9 @@
+rental_code,customer_code,goat_code,rental_date,return_date,event_type,rental_price,status
+RN001,CU001,GT002,2023-03-18,2023-03-18,photoshoot,80.00,completed
+RN002,CU003,GT004,2023-05-06,2023-05-06,birthday,120.00,completed
+RN003,CU002,GT006,2023-07-22,2023-07-22,photoshoot,80.00,completed
+RN004,CU004,GT007,2023-08-14,2023-08-15,petting_zoo,200.00,completed
+RN005,CU005,GT002,2023-10-01,2023-10-01,birthday,120.00,completed
+RN006,CU001,GT009,2024-01-20,2024-01-20,photoshoot,80.00,completed
+RN007,CU006,GT012,2024-03-15,2024-03-16,corporate,300.00,completed
+RN008,CU003,GT004,2024-05-10,2024-05-10,birthday,120.00,booked

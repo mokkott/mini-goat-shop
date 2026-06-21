@@ -1,0 +1,11 @@
+product_code,category_code,product_name,description,unit_price,unit
+PR001,FEED_HAY,Timothy Hay Premium,High-fibre hay for daily feeding,12.50,kg
+PR002,FEED_HAY,Orchard Grass Hay,Soft sweet hay loved by mini goats,11.00,kg
+PR003,FEED_PELLET,Mini Goat Pellets,Balanced pellet diet for dwarf breeds,9.99,kg
+PR004,FEED_PELLET,Kid Starter Pellets,High-protein blend for young goats,10.50,kg
+PR005,CARE_GROOM,Hoof Trimming Kit,Professional stainless steel kit,34.99,pcs
+PR006,CARE_GROOM,Grooming Brush Set,3-piece soft brush set,19.90,pcs
+PR007,CARE_VET,Vitamin B Complex,Injectable supplement 50ml vial,22.00,pcs
+PR008,CARE_VET,Deworming Paste,Broad-spectrum oral paste,18.50,pcs
+PR009,ACC_COLLAR,Adjustable Mini Collar,Soft nylon collar for small goats,8.99,pcs
+PR010,ACC_TOY,Hanging Tire Toy,Enrichment toy for active goats,15.00,pcs
