@@ -1,4 +1,4 @@
-SELECT
+select
     g.goat_code,
     g.name,
     b.breed_name,
@@ -6,203 +6,189 @@ SELECT
     g.gender,
     g.color,
     g.health_status,
-    DATE_PART('year', AGE(g.birth_date)) || ' y ' ||
-    DATE_PART('month', AGE(g.birth_date)) || ' m'  AS age
-FROM goat g
-JOIN breed b ON b.breed_code = g.breed_code
-WHERE g.available = TRUE
-ORDER BY b.breed_name, g.name;
+    date_part('year', age(g.birth_date)) || ' y ' ||
+    date_part('month', age(g.birth_date)) || ' m'  as age
+from goat g
+join breed b on b.breed_code = g.breed_code
+where g.available = true
+order by b.breed_name, g.name;
 
 
-SELECT
+select
     c.customer_code,
-    c.first_name || ' ' || c.last_name   AS customer_name,
+    c.first_name || ' ' || c.last_name   as customer_name,
     c.email,
-    COALESCE(sales.total_sales, 0)        AS sales_total,
-    COALESCE(rent.total_rentals, 0)       AS rentals_total,
-    COALESCE(sales.total_sales, 0)
-    + COALESCE(rent.total_rentals, 0)     AS grand_total,
-    COALESCE(sales.order_count, 0)        AS orders,
-    COALESCE(rent.rental_count, 0)        AS rentals
-FROM customer c
-LEFT JOIN (
-    SELECT oh.customer_code,
-           COUNT(DISTINCT oh.order_code)  AS order_count,
-           SUM(ol.line_total)             AS total_sales
-    FROM   order_header oh
-    JOIN   order_line   ol ON ol.order_code = oh.order_code
-    WHERE  oh.status <> 'cancelled'
-    GROUP  BY oh.customer_code
-) sales ON sales.customer_code = c.customer_code
-LEFT JOIN (
-    SELECT r.customer_code,
-           COUNT(*)         AS rental_count,
-           SUM(rental_price) AS total_rentals
-    FROM   rental r
-    WHERE  r.status <> 'cancelled'
-    GROUP  BY r.customer_code
-) rent ON rent.customer_code = c.customer_code
-ORDER BY grand_total DESC;
+    coalesce(sales.total_sales, 0)        as sales_total,
+    coalesce(rent.total_rentals, 0)       as rentals_total,
+    coalesce(sales.total_sales, 0)
+    + coalesce(rent.total_rentals, 0)     as grand_total,
+    coalesce(sales.order_count, 0)        as orders,
+    coalesce(rent.rental_count, 0)        as rentals
+from customer c
+left join (
+    select oh.customer_code,
+           count(distinct oh.order_code)  as order_count,
+           sum(ol.line_total)             as total_sales
+    from   order_header oh
+    join   order_line   ol on ol.order_code = oh.order_code
+    where  oh.status <> 'cancelled'
+    group  by oh.customer_code
+) sales on sales.customer_code = c.customer_code
+left join (
+    select r.customer_code,
+           count(*)          as rental_count,
+           sum(rental_price) as total_rentals
+    from   rental r
+    where  r.status <> 'cancelled'
+    group  by r.customer_code
+) rent on rent.customer_code = c.customer_code
+order by grand_total desc;
 
 
+select
+    to_char(period, 'YYYY-MM')    as month,
+    sum(goat_revenue)             as goat_sales,
+    sum(product_revenue)          as product_sales,
+    sum(rental_revenue)           as rental_revenue,
+    sum(goat_revenue + product_revenue + rental_revenue) as total_revenue
+from (
+    select
+        date_trunc('month', oh.order_date)              as period,
+        case when ol.goat_code is not null then ol.line_total else 0 end as goat_revenue,
+        case when ol.product_code is not null then ol.line_total else 0 end as product_revenue,
+        0                                               as rental_revenue
+    from order_line   ol
+    join order_header oh on oh.order_code = ol.order_code
+    where oh.status <> 'cancelled'
 
+    union all
 
-SELECT
-    TO_CHAR(period, 'YYYY-MM')    AS month,
-    SUM(goat_revenue)             AS goat_sales,
-    SUM(product_revenue)          AS product_sales,
-    SUM(rental_revenue)           AS rental_revenue,
-    SUM(goat_revenue + product_revenue + rental_revenue) AS total_revenue
-FROM (
-    SELECT
-        DATE_TRUNC('month', oh.order_date)              AS period,
-        CASE WHEN ol.goat_code IS NOT NULL THEN ol.line_total ELSE 0 END AS goat_revenue,
-        CASE WHEN ol.product_code IS NOT NULL THEN ol.line_total ELSE 0 END AS product_revenue,
-        0                                               AS rental_revenue
-    FROM order_line   ol
-    JOIN order_header oh ON oh.order_code = ol.order_code
-    WHERE oh.status <> 'cancelled'
-
-    UNION ALL
-
-    SELECT
-        DATE_TRUNC('month', r.rental_date)              AS period,
+    select
+        date_trunc('month', r.rental_date)              as period,
         0, 0,
         r.rental_price
-    FROM rental r
-    WHERE r.status <> 'cancelled'
+    from rental r
+    where r.status <> 'cancelled'
 ) src
-GROUP BY period
-ORDER BY period;
+group by period
+order by period;
 
 
-
-
-SELECT
+select
     g.goat_code,
     g.name,
     b.breed_name,
-    COUNT(r.rental_code)          AS times_rented,
-    SUM(r.return_date - r.rental_date + 1) AS total_days_rented,
-    SUM(r.rental_price)           AS total_rental_revenue,
-    ROUND(AVG(r.rental_price),2)  AS avg_rental_price
-FROM goat g
-JOIN breed  b ON b.breed_code  = g.breed_code
-LEFT JOIN rental r ON r.goat_code = g.goat_code AND r.status <> 'cancelled'
-GROUP BY g.goat_code, g.name, b.breed_name
-ORDER BY times_rented DESC, total_rental_revenue DESC;
+    count(r.rental_code)          as times_rented,
+    sum(r.return_date - r.rental_date + 1) as total_days_rented,
+    sum(r.rental_price)           as total_rental_revenue,
+    round(avg(r.rental_price),2)  as avg_rental_price
+from goat g
+join breed  b on b.breed_code  = g.breed_code
+left join rental r on r.goat_code = g.goat_code and r.status <> 'cancelled'
+group by g.goat_code, g.name, b.breed_name
+order by times_rented desc, total_rental_revenue desc;
 
 
+select
+    coalesce(parent.category_name, pc.category_name)  as top_category,
+    pc.category_name                                   as sub_category,
+    count(distinct p.product_code)                     as distinct_products,
+    sum(ol.quantity)                                   as units_sold,
+    sum(ol.line_total)                                 as revenue
+from order_line ol
+join product          p      on p.product_code     = ol.product_code
+join product_category pc     on pc.category_code   = p.category_code
+left join product_category parent on parent.category_code = pc.parent_category_code
+join order_header     oh     on oh.order_code      = ol.order_code
+where ol.product_code is not null
+  and oh.status <> 'cancelled'
+group by coalesce(parent.category_name, pc.category_name), pc.category_name
+order by revenue desc;
 
 
-SELECT
-    COALESCE(parent.category_name, pc.category_name)  AS top_category,
-    pc.category_name                                   AS sub_category,
-    COUNT(DISTINCT p.product_code)                     AS distinct_products,
-    SUM(ol.quantity)                                   AS units_sold,
-    SUM(ol.line_total)                                 AS revenue
-FROM order_line ol
-JOIN product          p      ON p.product_code     = ol.product_code
-JOIN product_category pc     ON pc.category_code   = p.category_code
-LEFT JOIN product_category parent ON parent.category_code = pc.parent_category_code
-JOIN order_header     oh     ON oh.order_code      = ol.order_code
-WHERE ol.product_code IS NOT NULL
-  AND oh.status <> 'cancelled'
-GROUP BY COALESCE(parent.category_name, pc.category_name), pc.category_name
-ORDER BY revenue DESC;
-
-
-
-
-SELECT
+select
     dd.year,
     dd.quarter,
     fs.line_type,
-    COUNT(*)              AS transactions,
-    SUM(fs.quantity)      AS units_sold,
-    SUM(fs.line_total)    AS revenue,
-    ROUND(AVG(fs.line_total),2) AS avg_transaction
-FROM olap.fact_sales  fs
-JOIN olap.dim_date    dd ON dd.date_key = fs.date_key
-WHERE fs.order_status <> 'cancelled'
-GROUP BY ROLLUP(dd.year, dd.quarter, fs.line_type)
-ORDER BY dd.year NULLS LAST, dd.quarter NULLS LAST, fs.line_type NULLS LAST;
+    count(*)              as transactions,
+    sum(fs.quantity)      as units_sold,
+    sum(fs.line_total)    as revenue,
+    round(avg(fs.line_total),2) as avg_transaction
+from olap.fact_sales  fs
+join olap.dim_date    dd on dd.date_key = fs.date_key
+where fs.order_status <> 'cancelled'
+group by rollup(dd.year, dd.quarter, fs.line_type)
+order by dd.year nulls last, dd.quarter nulls last, fs.line_type nulls last;
 
 
-
-
-SELECT
+select
     dd.year,
     dd.month_name,
     dd.month_num,
     fr.event_type,
-    COUNT(*)                        AS bookings,
-    SUM(fr.rental_days)             AS total_days,
-    SUM(fr.rental_price)            AS revenue,
-    ROUND(AVG(fr.rental_price),2)   AS avg_price_per_booking
-FROM olap.fact_rental fr
-JOIN olap.dim_date    dd ON dd.date_key = fr.start_date_key
-WHERE fr.rental_status <> 'cancelled'
-GROUP BY dd.year, dd.month_num, dd.month_name, fr.event_type
-ORDER BY dd.year, dd.month_num, revenue DESC;
+    count(*)                        as bookings,
+    sum(fr.rental_days)             as total_days,
+    sum(fr.rental_price)            as revenue,
+    round(avg(fr.rental_price),2)   as avg_price_per_booking
+from olap.fact_rental fr
+join olap.dim_date    dd on dd.date_key = fr.start_date_key
+where fr.rental_status <> 'cancelled'
+group by dd.year, dd.month_num, dd.month_name, fr.event_type
+order by dd.year, dd.month_num, revenue desc;
 
 
-
-
-SELECT
+select
     db.breed_name,
     db.size_category,
-    COUNT(DISTINCT CASE WHEN fs.line_type = 'goat' THEN fs.order_code END) AS goats_sold,
-    COALESCE(SUM(CASE WHEN fs.line_type = 'goat' THEN fs.line_total END), 0) AS sales_revenue,
-    COUNT(DISTINCT fr.rental_code)   AS rental_bookings,
-    COALESCE(SUM(fr.rental_price), 0) AS rental_revenue,
-    COALESCE(SUM(CASE WHEN fs.line_type = 'goat' THEN fs.line_total END), 0)
-    + COALESCE(SUM(fr.rental_price), 0) AS total_revenue
-FROM olap.dim_breed db
-JOIN olap.dim_goat  dg ON dg.breed_key = db.breed_key AND dg.is_current = TRUE
-LEFT JOIN olap.fact_sales  fs ON fs.goat_key = dg.goat_key
-LEFT JOIN olap.fact_rental fr ON fr.goat_key = dg.goat_key AND fr.rental_status <> 'cancelled'
-GROUP BY db.breed_name, db.size_category
-ORDER BY total_revenue DESC;
+    count(distinct case when fs.line_type = 'goat' then fs.order_code end) as goats_sold,
+    coalesce(sum(case when fs.line_type = 'goat' then fs.line_total end), 0) as sales_revenue,
+    count(distinct fr.rental_code)    as rental_bookings,
+    coalesce(sum(fr.rental_price), 0) as rental_revenue,
+    coalesce(sum(case when fs.line_type = 'goat' then fs.line_total end), 0)
+    + coalesce(sum(fr.rental_price), 0) as total_revenue
+from olap.dim_breed db
+join olap.dim_goat  dg on dg.breed_key = db.breed_key and dg.is_current = true
+left join olap.fact_sales  fs on fs.goat_key = dg.goat_key
+left join olap.fact_rental fr on fr.goat_key = dg.goat_key and fr.rental_status <> 'cancelled'
+group by db.breed_name, db.size_category
+order by total_revenue desc;
 
 
-
-SELECT
+select
     dc.customer_code,
-    dc.first_name || ' ' || dc.last_name   AS customer_name,
+    dc.first_name || ' ' || dc.last_name   as customer_name,
     dc.city,
-    EXTRACT(YEAR FROM dc.registration_date) AS cohort_year,
-    COUNT(DISTINCT fs.order_code)           AS total_orders,
-    COALESCE(SUM(fs.line_total), 0)         AS sales_ltv,
-    COUNT(DISTINCT fr.rental_code)          AS total_rentals,
-    COALESCE(SUM(fr.rental_price), 0)       AS rental_ltv,
-    COALESCE(SUM(fs.line_total), 0)
-    + COALESCE(SUM(fr.rental_price), 0)     AS lifetime_value
-FROM olap.dim_customer dc
-LEFT JOIN olap.fact_sales  fs ON fs.customer_key = dc.customer_key
-                              AND fs.order_status <> 'cancelled'
-LEFT JOIN olap.fact_rental fr ON fr.customer_key = dc.customer_key
-                              AND fr.rental_status <> 'cancelled'
-GROUP BY dc.customer_code, dc.first_name, dc.last_name, dc.city, dc.registration_date
-ORDER BY lifetime_value DESC;
+    extract(year from dc.registration_date) as cohort_year,
+    count(distinct fs.order_code)           as total_orders,
+    coalesce(sum(fs.line_total), 0)         as sales_ltv,
+    count(distinct fr.rental_code)          as total_rentals,
+    coalesce(sum(fr.rental_price), 0)       as rental_ltv,
+    coalesce(sum(fs.line_total), 0)
+    + coalesce(sum(fr.rental_price), 0)     as lifetime_value
+from olap.dim_customer dc
+left join olap.fact_sales  fs on fs.customer_key = dc.customer_key
+                              and fs.order_status <> 'cancelled'
+left join olap.fact_rental fr on fr.customer_key = dc.customer_key
+                              and fr.rental_status <> 'cancelled'
+group by dc.customer_code, dc.first_name, dc.last_name, dc.city, dc.registration_date
+order by lifetime_value desc;
 
 
-
-SELECT
+select
     dd.year,
     dd.quarter,
-    dpc.parent_category_name                         AS top_category,
-    dpc.category_name                                AS sub_category,
-    SUM(fs.line_total)                               AS revenue,
-    ROUND(
-        100.0 * SUM(fs.line_total)
-        / SUM(SUM(fs.line_total)) OVER (PARTITION BY dd.year, dd.quarter),
-    2)                                               AS pct_of_quarter_revenue
-FROM olap.fact_sales         fs
-JOIN olap.dim_date           dd  ON dd.date_key    = fs.date_key
-JOIN olap.dim_product        dp  ON dp.product_key = fs.product_key
-JOIN olap.dim_product_category dpc ON dpc.category_key = dp.category_key
-WHERE fs.line_type     = 'product'
-  AND fs.order_status <> 'cancelled'
-GROUP BY dd.year, dd.quarter, dpc.parent_category_name, dpc.category_name
-ORDER BY dd.year, dd.quarter, revenue DESC;
+    dpc.parent_category_name                         as top_category,
+    dpc.category_name                                as sub_category,
+    sum(fs.line_total)                               as revenue,
+    round(
+        100.0 * sum(fs.line_total)
+        / sum(sum(fs.line_total)) over (partition by dd.year, dd.quarter),
+    2)                                               as pct_of_quarter_revenue
+from olap.fact_sales         fs
+join olap.dim_date           dd  on dd.date_key    = fs.date_key
+join olap.dim_product        dp  on dp.product_key = fs.product_key
+join olap.dim_product_category dpc on dpc.category_key = dp.category_key
+where fs.line_type     = 'product'
+  and fs.order_status <> 'cancelled'
+group by dd.year, dd.quarter, dpc.parent_category_name, dpc.category_name
+order by dd.year, dd.quarter, revenue desc;
