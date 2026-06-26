@@ -1,100 +1,100 @@
-DROP TABLE IF EXISTS rental       CASCADE;
-DROP TABLE IF EXISTS order_line   CASCADE;
-DROP TABLE IF EXISTS order_header CASCADE;
-DROP TABLE IF EXISTS product      CASCADE;
-DROP TABLE IF EXISTS product_category CASCADE;
-DROP TABLE IF EXISTS customer     CASCADE;
-DROP TABLE IF EXISTS goat         CASCADE;
-DROP TABLE IF EXISTS breed        CASCADE;
+drop table if exists rental           cascade;
+drop table if exists order_line       cascade;
+drop table if exists order_header     cascade;
+drop table if exists product          cascade;
+drop table if exists product_category cascade;
+drop table if exists customer         cascade;
+drop table if exists goat             cascade;
+drop table if exists breed            cascade;
 
-CREATE TABLE breed (
-    breed_code       VARCHAR(20)  PRIMARY KEY,
-    breed_name       VARCHAR(100) NOT NULL UNIQUE,
-    size_category    VARCHAR(20)  NOT NULL CHECK (size_category IN ('mini','dwarf','standard')),
-    origin_country   VARCHAR(100),
-    description      TEXT
+create table breed (
+    breed_code       varchar(20)  primary key,
+    breed_name       varchar(100) not null unique,
+    size_category    varchar(20)  not null check (size_category in ('mini','dwarf','standard')),
+    origin_country   varchar(100),
+    description      text
 );
 
-CREATE TABLE goat (
-    goat_code      VARCHAR(20)  PRIMARY KEY,
-    breed_code     VARCHAR(20)  NOT NULL REFERENCES breed(breed_code),
-    name           VARCHAR(100) NOT NULL,
-    birth_date     DATE         NOT NULL,
-    gender         VARCHAR(10)  NOT NULL CHECK (gender IN ('male','female')),
-    color          VARCHAR(50),
-    health_status  VARCHAR(30)  NOT NULL DEFAULT 'healthy'
-                                CHECK (health_status IN ('healthy','vaccinated','quarantine')),
-    available      BOOLEAN      NOT NULL DEFAULT TRUE
+create table goat (
+    goat_code      varchar(20)  primary key,
+    breed_code     varchar(20)  not null references breed(breed_code),
+    name           varchar(100) not null,
+    birth_date     date         not null,
+    gender         varchar(10)  not null check (gender in ('male','female')),
+    color          varchar(50),
+    health_status  varchar(30)  not null default 'healthy'
+                                check (health_status in ('healthy','vaccinated','quarantine')),
+    available      boolean      not null default true
 );
 
-CREATE TABLE product_category (
-    category_code        VARCHAR(20)  PRIMARY KEY,
-    category_name        VARCHAR(100) NOT NULL,
-    parent_category_code VARCHAR(20)  REFERENCES product_category(category_code)
+create table product_category (
+    category_code        varchar(20)  primary key,
+    category_name        varchar(100) not null,
+    parent_category_code varchar(20)  references product_category(category_code)
 );
 
-CREATE TABLE product (
-    product_code  VARCHAR(20)   PRIMARY KEY,
-    category_code VARCHAR(20)   NOT NULL REFERENCES product_category(category_code),
-    product_name  VARCHAR(150)  NOT NULL,
-    description   TEXT,
-    unit_price    NUMERIC(10,2) NOT NULL CHECK (unit_price > 0),
-    unit          VARCHAR(20)   NOT NULL DEFAULT 'pcs'
+create table product (
+    product_code  varchar(20)   primary key,
+    category_code varchar(20)   not null references product_category(category_code),
+    product_name  varchar(150)  not null,
+    description   text,
+    unit_price    numeric(10,2) not null check (unit_price > 0),
+    unit          varchar(20)   not null default 'pcs'
 );
 
-CREATE TABLE customer (
-    customer_code     VARCHAR(20)  PRIMARY KEY,
-    email             VARCHAR(150) NOT NULL UNIQUE,
-    first_name        VARCHAR(80)  NOT NULL,
-    last_name         VARCHAR(80)  NOT NULL,
-    phone             VARCHAR(30),
-    address           TEXT,
-    registration_date DATE         NOT NULL DEFAULT CURRENT_DATE
+create table customer (
+    customer_code     varchar(20)  primary key,
+    email             varchar(150) not null unique,
+    first_name        varchar(80)  not null,
+    last_name         varchar(80)  not null,
+    phone             varchar(30),
+    address           text,
+    registration_date date         not null default current_date
 );
 
-CREATE TABLE order_header (
-    order_code     VARCHAR(20)   PRIMARY KEY,
-    customer_code  VARCHAR(20)   NOT NULL REFERENCES customer(customer_code),
-    order_date     DATE          NOT NULL DEFAULT CURRENT_DATE,
-    status         VARCHAR(30)   NOT NULL DEFAULT 'new'
-                                 CHECK (status IN ('new','processing','shipped','delivered','cancelled')),
-    payment_method VARCHAR(30)   NOT NULL CHECK (payment_method IN ('card','cash','transfer')),
-    total_amount   NUMERIC(12,2) NOT NULL CHECK (total_amount >= 0)
+create table order_header (
+    order_code     varchar(20)   primary key,
+    customer_code  varchar(20)   not null references customer(customer_code),
+    order_date     date          not null default current_date,
+    status         varchar(30)   not null default 'new'
+                                 check (status in ('new','processing','shipped','delivered','cancelled')),
+    payment_method varchar(30)   not null check (payment_method in ('card','cash','transfer')),
+    total_amount   numeric(12,2) not null check (total_amount >= 0)
 );
 
-CREATE TABLE order_line (
-    order_line_code VARCHAR(20)   PRIMARY KEY,
-    order_code      VARCHAR(20)   NOT NULL REFERENCES order_header(order_code),
-    goat_code       VARCHAR(20)   REFERENCES goat(goat_code),
-    product_code    VARCHAR(20)   REFERENCES product(product_code),
-    quantity        INT           NOT NULL DEFAULT 1 CHECK (quantity > 0),
-    unit_price      NUMERIC(10,2) NOT NULL CHECK (unit_price > 0),
-    line_total      NUMERIC(12,2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
-    CONSTRAINT chk_item CHECK (
-        (goat_code IS NOT NULL AND product_code IS NULL)
-        OR (goat_code IS NULL AND product_code IS NOT NULL)
+create table order_line (
+    order_line_code varchar(20)   primary key,
+    order_code      varchar(20)   not null references order_header(order_code),
+    goat_code       varchar(20)   references goat(goat_code),
+    product_code    varchar(20)   references product(product_code),
+    quantity        int           not null default 1 check (quantity > 0),
+    unit_price      numeric(10,2) not null check (unit_price > 0),
+    line_total      numeric(12,2) generated always as (quantity * unit_price) stored,
+    constraint chk_item check (
+        (goat_code is not null and product_code is null)
+        or (goat_code is null and product_code is not null)
     )
 );
 
-CREATE TABLE rental (
-    rental_code   VARCHAR(20)   PRIMARY KEY,
-    customer_code VARCHAR(20)   NOT NULL REFERENCES customer(customer_code),
-    goat_code     VARCHAR(20)   NOT NULL REFERENCES goat(goat_code),
-    rental_date   DATE          NOT NULL,
-    return_date   DATE          NOT NULL,
-    event_type    VARCHAR(50)   NOT NULL CHECK (event_type IN ('photoshoot','birthday','petting_zoo','corporate','other')),
-    rental_price  NUMERIC(10,2) NOT NULL CHECK (rental_price > 0),
-    status        VARCHAR(20)   NOT NULL DEFAULT 'booked'
-                                CHECK (status IN ('booked','active','completed','cancelled')),
-    CONSTRAINT chk_dates CHECK (return_date >= rental_date)
+create table rental (
+    rental_code   varchar(20)   primary key,
+    customer_code varchar(20)   not null references customer(customer_code),
+    goat_code     varchar(20)   not null references goat(goat_code),
+    rental_date   date          not null,
+    return_date   date          not null,
+    event_type    varchar(50)   not null check (event_type in ('photoshoot','birthday','petting_zoo','corporate','other')),
+    rental_price  numeric(10,2) not null check (rental_price > 0),
+    status        varchar(20)   not null default 'booked'
+                                check (status in ('booked','active','completed','cancelled')),
+    constraint chk_dates check (return_date >= rental_date)
 );
 
-CREATE INDEX idx_goat_breed        ON goat(breed_code);
-CREATE INDEX idx_goat_available    ON goat(available);
-CREATE INDEX idx_order_customer    ON order_header(customer_code);
-CREATE INDEX idx_order_date        ON order_header(order_date);
-CREATE INDEX idx_order_line_order  ON order_line(order_code);
-CREATE INDEX idx_rental_customer   ON rental(customer_code);
-CREATE INDEX idx_rental_goat       ON rental(goat_code);
-CREATE INDEX idx_rental_date       ON rental(rental_date);
-CREATE INDEX idx_product_category  ON product(category_code);
+create index idx_goat_breed        on goat(breed_code);
+create index idx_goat_available    on goat(available);
+create index idx_order_customer    on order_header(customer_code);
+create index idx_order_date        on order_header(order_date);
+create index idx_order_line_order  on order_line(order_code);
+create index idx_rental_customer   on rental(customer_code);
+create index idx_rental_goat       on rental(goat_code);
+create index idx_rental_date       on rental(rental_date);
+create index idx_product_category  on product(category_code);
