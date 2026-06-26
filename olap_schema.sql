@@ -1,120 +1,122 @@
-DROP TABLE IF EXISTS fact_rental        CASCADE;
-DROP TABLE IF EXISTS fact_sales         CASCADE;
-DROP TABLE IF EXISTS bridge_order_goat  CASCADE;
-DROP TABLE IF EXISTS dim_product        CASCADE;
-DROP TABLE IF EXISTS dim_product_category CASCADE;
-DROP TABLE IF EXISTS dim_goat           CASCADE;
-DROP TABLE IF EXISTS dim_breed          CASCADE;
-DROP TABLE IF EXISTS dim_customer       CASCADE;
-DROP TABLE IF EXISTS dim_date           CASCADE;
+drop table if exists fact_rental          cascade;
+drop table if exists fact_sales           cascade;
+drop table if exists bridge_order_goat    cascade;
+drop table if exists dim_product          cascade;
+drop table if exists dim_product_category cascade;
+drop table if exists dim_goat             cascade;
+drop table if exists dim_breed            cascade;
+drop table if exists dim_customer         cascade;
+drop table if exists dim_date             cascade;
 
-CREATE TABLE dim_date (
-    date_key      INT          PRIMARY KEY,   
-    full_date     DATE         NOT NULL UNIQUE,
-    day_of_week   SMALLINT     NOT NULL,       
-    day_name      VARCHAR(10)  NOT NULL,
-    day_of_month  SMALLINT     NOT NULL,
-    month_num     SMALLINT     NOT NULL,
-    month_name    VARCHAR(10)  NOT NULL,
-    quarter       SMALLINT     NOT NULL,
-    year          SMALLINT     NOT NULL,
-    is_weekend    BOOLEAN      NOT NULL
+create table dim_date (
+    date_key      int          primary key,
+    full_date     date         not null unique,
+    day_of_week   smallint     not null,
+    day_name      varchar(10)  not null,
+    day_of_month  smallint     not null,
+    month_num     smallint     not null,
+    month_name    varchar(10)  not null,
+    quarter       smallint     not null,
+    year          smallint     not null,
+    is_weekend    boolean      not null
 );
 
-CREATE TABLE dim_breed (
-    breed_key       SERIAL       PRIMARY KEY,
-    breed_code      VARCHAR(20)  NOT NULL UNIQUE,
-    breed_name      VARCHAR(100) NOT NULL,
-    size_category   VARCHAR(20)  NOT NULL,
-    origin_country  VARCHAR(100)
+create table dim_breed (
+    breed_key       serial       primary key,
+    breed_code      varchar(20)  not null unique,
+    breed_name      varchar(100) not null,
+    size_category   varchar(20)  not null,
+    origin_country  varchar(100)
 );
 
-CREATE TABLE dim_goat (
-    goat_key        SERIAL       PRIMARY KEY,
-    goat_code       VARCHAR(20)  NOT NULL,
-    breed_key       INT          NOT NULL REFERENCES dim_breed(breed_key),
-    name            VARCHAR(100) NOT NULL,
-    birth_date      DATE         NOT NULL,
-    gender          VARCHAR(10)  NOT NULL,
-    color           VARCHAR(50),
-    health_status   VARCHAR(30)  NOT NULL,
-    available       BOOLEAN      NOT NULL,
-    -- SCD Type 2 tracking columns
-    valid_from      DATE         NOT NULL,
-    valid_to        DATE,                     
-    is_current      BOOLEAN      NOT NULL DEFAULT TRUE
+create table dim_goat (
+    goat_key        serial       primary key,
+    goat_code       varchar(20)  not null,
+    breed_key       int          not null references dim_breed(breed_key),
+    name            varchar(100) not null,
+    birth_date      date         not null,
+    gender          varchar(10)  not null,
+    color           varchar(50),
+    health_status   varchar(30)  not null,
+    available       boolean      not null,
+    -- scd type 2 tracking columns
+    valid_from      date         not null,
+    valid_to        date,
+    is_current      boolean      not null default true
 );
 
-CREATE INDEX idx_dim_goat_code    ON dim_goat(goat_code);
-CREATE INDEX idx_dim_goat_current ON dim_goat(goat_code, is_current);
+create index idx_dim_goat_code    on dim_goat(goat_code);
+create index idx_dim_goat_current on dim_goat(goat_code, is_current);
 
-CREATE TABLE dim_customer (
-    customer_key      SERIAL       PRIMARY KEY,
-    customer_code     VARCHAR(20)  NOT NULL UNIQUE,
-    email             VARCHAR(150) NOT NULL,
-    first_name        VARCHAR(80)  NOT NULL,
-    last_name         VARCHAR(80)  NOT NULL,
-    city              VARCHAR(80),            
-    registration_date DATE         NOT NULL
+create table dim_customer (
+    customer_key      serial       primary key,
+    customer_code     varchar(20)  not null unique,
+    email             varchar(150) not null,
+    first_name        varchar(80)  not null,
+    last_name         varchar(80)  not null,
+    city              varchar(80),
+    registration_date date         not null
 );
 
-CREATE TABLE dim_product_category (
-    category_key         SERIAL       PRIMARY KEY,
-    category_code        VARCHAR(20)  NOT NULL UNIQUE,
-    category_name        VARCHAR(100) NOT NULL,
-    parent_category_code VARCHAR(20),
-    parent_category_name VARCHAR(100)
+create table dim_product_category (
+    category_key         serial       primary key,
+    category_code        varchar(20)  not null unique,
+    category_name        varchar(100) not null,
+    parent_category_code varchar(20),
+    parent_category_name varchar(100)
 );
 
-CREATE TABLE dim_product (
-    product_key      SERIAL        PRIMARY KEY,
-    product_code     VARCHAR(20)   NOT NULL UNIQUE,
-    category_key     INT           NOT NULL REFERENCES dim_product_category(category_key),
-    product_name     VARCHAR(150)  NOT NULL,
-    unit_price       NUMERIC(10,2) NOT NULL,
-    unit             VARCHAR(20)   NOT NULL
+create table dim_product (
+    product_key      serial        primary key,
+    product_code     varchar(20)   not null unique,
+    category_key     int           not null references dim_product_category(category_key),
+    product_name     varchar(150)  not null,
+    unit_price       numeric(10,2) not null,
+    unit             varchar(20)   not null
 );
 
-CREATE TABLE bridge_order_goat (
-    bridge_key    SERIAL      PRIMARY KEY,
-    order_code    VARCHAR(20) NOT NULL,
-    goat_key      INT         NOT NULL REFERENCES dim_goat(goat_key),
-    weight_factor NUMERIC(5,4) NOT NULL DEFAULT 1.0
+create table bridge_order_goat (
+    bridge_key    serial       primary key,
+    order_code    varchar(20)  not null,
+    goat_key      int          not null references dim_goat(goat_key),
+    weight_factor numeric(5,4) not null default 1.0
 );
 
-CREATE INDEX idx_bridge_order ON bridge_order_goat(order_code);
-CREATE TABLE fact_sales (
-    sales_key         SERIAL        PRIMARY KEY,
-    order_code        VARCHAR(20)   NOT NULL,
-    order_line_code   VARCHAR(20)   NOT NULL UNIQUE,
-    date_key          INT           NOT NULL REFERENCES dim_date(date_key),
-    customer_key      INT           NOT NULL REFERENCES dim_customer(customer_key),
-    product_key       INT           REFERENCES dim_product(product_key),
-    goat_key          INT           REFERENCES dim_goat(goat_key),
-    line_type         VARCHAR(10)   NOT NULL CHECK (line_type IN ('product','goat')),
-    quantity          INT           NOT NULL,
-    unit_price        NUMERIC(10,2) NOT NULL,
-    line_total        NUMERIC(12,2) NOT NULL,
-    payment_method    VARCHAR(30)   NOT NULL,
-    order_status      VARCHAR(30)   NOT NULL
+create index idx_bridge_order on bridge_order_goat(order_code);
+
+create table fact_sales (
+    sales_key         serial        primary key,
+    order_code        varchar(20)   not null,
+    order_line_code   varchar(20)   not null unique,
+    date_key          int           not null references dim_date(date_key),
+    customer_key      int           not null references dim_customer(customer_key),
+    product_key       int           references dim_product(product_key),
+    goat_key          int           references dim_goat(goat_key),
+    line_type         varchar(10)   not null check (line_type in ('product','goat')),
+    quantity          int           not null,
+    unit_price        numeric(10,2) not null,
+    line_total        numeric(12,2) not null,
+    payment_method    varchar(30)   not null,
+    order_status      varchar(30)   not null
 );
 
-CREATE INDEX idx_fact_sales_date     ON fact_sales(date_key);
-CREATE INDEX idx_fact_sales_customer ON fact_sales(customer_key);
-CREATE INDEX idx_fact_sales_product  ON fact_sales(product_key);
-CREATE TABLE fact_rental (
-    rental_key        SERIAL        PRIMARY KEY,
-    rental_code       VARCHAR(20)   NOT NULL UNIQUE,
-    start_date_key    INT           NOT NULL REFERENCES dim_date(date_key),
-    end_date_key      INT           NOT NULL REFERENCES dim_date(date_key),
-    customer_key      INT           NOT NULL REFERENCES dim_customer(customer_key),
-    goat_key          INT           NOT NULL REFERENCES dim_goat(goat_key),
-    event_type        VARCHAR(50)   NOT NULL,
-    rental_days       INT           NOT NULL,
-    rental_price      NUMERIC(10,2) NOT NULL,
-    rental_status     VARCHAR(20)   NOT NULL
+create index idx_fact_sales_date     on fact_sales(date_key);
+create index idx_fact_sales_customer on fact_sales(customer_key);
+create index idx_fact_sales_product  on fact_sales(product_key);
+
+create table fact_rental (
+    rental_key        serial        primary key,
+    rental_code       varchar(20)   not null unique,
+    start_date_key    int           not null references dim_date(date_key),
+    end_date_key      int           not null references dim_date(date_key),
+    customer_key      int           not null references dim_customer(customer_key),
+    goat_key          int           not null references dim_goat(goat_key),
+    event_type        varchar(50)   not null,
+    rental_days       int           not null,
+    rental_price      numeric(10,2) not null,
+    rental_status     varchar(20)   not null
 );
 
-CREATE INDEX idx_fact_rental_date     ON fact_rental(start_date_key);
-CREATE INDEX idx_fact_rental_customer ON fact_rental(customer_key);
-CREATE INDEX idx_fact_rental_goat     ON fact_rental(goat_key);
+create index idx_fact_rental_date     on fact_rental(start_date_key);
+create index idx_fact_rental_customer on fact_rental(customer_key);
+create index idx_fact_rental_goat     on fact_rental(goat_key);
